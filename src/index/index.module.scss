@@ -1,0 +1,79 @@
+.bg {
+  width: 100%;
+  height: 100%;
+  background-image: url("/img/easter-eggs.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  .content {
+    flex: 0 0 auto;
+    width: 900px;
+    height: 660px;
+    border-radius: 10px;
+    margin: auto auto;
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(70px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: 20px;
+    flex-direction: column;
+    position: relative;
+    .github {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 60px;
+      height: 60px;
+      background-image: url("/img/github.svg");
+      background-size: 40px 40px;
+      background-position: center;
+      background-repeat: no-repeat;
+      cursor: pointer;
+      z-index: 1;
+    }
+    .row {
+      width: 100%;
+      height: 300px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      position: relative;
+      .arrow {
+        position: absolute;
+        top: 280px;
+        filter: drop-shadow(0 0 5px #fff);
+        &:first-child {
+          left: 20%;
+          transform: rotateY(180deg) rotate(40deg);
+        }
+        &:last-child {
+          right: 20%;
+          transform: rotate(40deg);
+        }
+        width: 100px;
+        height: 100px;
+        background-image: url("/img/arrow.svg");
+        background-size: contain;
+        background-repeat: no-repeat;
+        z-index: 3;
+        user-select: none;
+        pointer-events: none;
+      }
+      .originalImg {
+        height: 260px;
+        border-radius: 2px;
+      }
+      &:nth-child(3) {
+        align-items: flex-start;
+      }
+      &:last-child {
+        margin-top: 20px;
+        justify-content: space-around;
+      }
+    }
+  }
+}
