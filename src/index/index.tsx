@@ -7,14 +7,17 @@ import {
   encodeImageToBlurhash,
   generateGradient,
   loadImage,
+  getImageData,
 } from "../utils";
 import { Toaster, toast } from "sonner";
 import { Image } from "./types";
+import glur from "glur";
 
 export default function Index(): ReactElement {
   const [blurhash, setBlurhash] = useState<string>("");
   const [gradient, setGradient] = useState<string>("");
   const [image, setImage] = useState<Image | null>(null);
+  const [glurData, setGlurData] = useState<any>("");
 
   const getBlurHash = async (url) => {
     const hash = await encodeImageToBlurhash(url);
@@ -39,22 +42,62 @@ export default function Index(): ReactElement {
     }
   };
 
+  const generateGlur = async (url) => {
+    const resizedUrl = (await resize(url, 32)) as string;
+    const img = (await loadImage(resizedUrl)) as HTMLImageElement;
+    let imageData = getImageData(img);
+    glur(imageData.data, img.width, img.height, img.width / 10);
+    setGlurData({
+      imageData,
+      width: img.width,
+      height: img.height,
+    });
+  };
+
   const onFileChange = async (url) => {
     try {
       const resizedUrl = (await resize(url)) as string;
+      const previewUrl = (await resize(url, 800)) as string;
       getBlurHash(resizedUrl);
       getGradient(resizedUrl);
-      const image = (await loadImage(url)) as HTMLImageElement;
-      setImage({
-        width: image.width,
-        height: image.height,
+      const img = (await loadImage(url)) as HTMLImageElement;
+      const imgObj = {
+        width: img.width,
+        height: img.height,
         url: resizedUrl,
+        previewUrl,
         originalUrl: /blob/.test(url) ? "" : url,
-      });
+      };
+      setImage(imgObj);
+      generateGlur(url);
     } catch (error) {
       toast(error.message);
     }
   };
+
+  const calculateSize = (image) => {
+    const baseWidth = 400;
+    const baseHeight = 300;
+    const ratio = image ? image.height / image.width : 0;
+    if (image) {
+      if (image.width >= image.height) {
+        const calcHeight = baseWidth * ratio;
+
+        return {
+          width: calcHeight > baseHeight ? baseHeight / ratio : baseWidth,
+          height: calcHeight > baseHeight ? baseHeight : calcHeight,
+        };
+      } else {
+        return {
+          width: baseHeight / ratio,
+          height: baseHeight,
+        };
+      }
+    }
+    return {};
+  };
+
+  const sizes = calculateSize(image);
 
   return (
     <>
@@ -75,18 +118,36 @@ export default function Index(): ReactElement {
             className={styles.github}
           ></a>
           <div className={styles.row}>
-            {image && (
-              <>
-                <div className={styles.arrow}></div>
-                <img className={styles.originalImg} src={image.url} />
-                <div className={styles.arrow}></div>
-              </>
-            )}
+            <div>
+              {image && (
+                <>
+                  <img
+                    className={styles.originalImg}
+                    src={image.previewUrl}
+                    style={{
+                      ...sizes,
+                    }}
+                  />
+                </>
+              )}
+            </div>
+            <BluryZone
+              image={image}
+              glurData={glurData}
+              sizes={sizes}
+            ></BluryZone>
           </div>
           <div className={styles.row}>
-            <BluryZone image={image} blurhash={blurhash}></BluryZone>
-
-            <BluryZone image={image} gradient={gradient}></BluryZone>
+            <BluryZone
+              image={image}
+              blurhash={blurhash}
+              sizes={sizes}
+            ></BluryZone>
+            <BluryZone
+              image={image}
+              gradient={gradient}
+              sizes={sizes}
+            ></BluryZone>
           </div>
         </div>
       </div>

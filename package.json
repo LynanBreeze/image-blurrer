@@ -12,6 +12,7 @@
   "dependencies": {
     "blurhash": "^2.0.5",
     "copy-to-clipboard": "^3.3.3",
+    "glur": "^1.1.2",
     "query-string": "^8.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

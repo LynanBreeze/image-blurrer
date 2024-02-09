@@ -14,6 +14,10 @@
     &:hover {
       color: #238efa;
     }
+    &.isGlur {
+      top: 0;
+      bottom: unset;
+    }
   }
   .base64 {
     position: absolute;

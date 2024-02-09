@@ -10,12 +10,19 @@ interface IProps {
   image: Image;
   blurhash?: string;
   gradient?: string;
+  glurData?: any;
+  sizes: {
+    width?: number;
+    height?: number;
+  };
 }
 
 export default function BluryZone({
   image,
   blurhash,
   gradient,
+  glurData,
+  sizes,
 }: IProps): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const modeRef = useRef(qs.parse(location.search).mode);
@@ -33,40 +40,34 @@ export default function BluryZone({
     ctx.putImageData(imageData, 0, 0);
   };
 
+  const renderGlur = async (glurData) => {
+    const { imageData, width, height } = glurData;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    canvas.width = width;
+    canvas.height = height;
+    ctx.putImageData(imageData, 0, 0);
+  };
+
   useEffect(() => {
     if (blurhash) {
       renderBlurhash(blurhash);
     }
   }, [blurhash]);
 
-  const ratio = image ? image.height / image.width : 0;
-
-  const calculateSize = (image) => {
-    const baseWidth = 400;
-    const baseHeight = 300;
-    if (image) {
-      if (image.width >= image.height) {
-        const calcHeight = baseWidth * ratio;
-
-        return {
-          width: calcHeight > baseHeight ? baseHeight / ratio : baseWidth,
-          height: calcHeight > baseHeight ? baseHeight : calcHeight,
-        };
-      } else {
-        return {
-          width: baseHeight / ratio,
-          height: baseHeight,
-        };
-      }
+  useEffect(() => {
+    if (glurData) {
+      renderGlur(glurData);
     }
-    return {};
-  };
-
-  const sizes = calculateSize(image);
+  }, [glurData]);
 
   const copyBlurVariable = async (e) => {
-    if (e.target.tagName === "A" || /output|base64/.test(e.target.className))
+    if (glurData) {
       return;
+    }
+    if (e.target.tagName === "A" || /output|base64/.test(e.target.className)) {
+      return;
+    }
     const bluryVar = blurhash || gradient || "";
     if (modeRef.current === "md") {
       if (blurhash && /\[|\]/.test(blurhash)) {
@@ -103,6 +104,9 @@ export default function BluryZone({
     } else if (gradient) {
       res.name = "gradient";
       res.link = "https://github.com/peterekepeter/image-to-gradient";
+    } else if (glurData) {
+      res.name = "Gaussian Blur";
+      res.link = "https://github.com/nodeca/glur";
     }
     return res;
   };
@@ -144,21 +148,27 @@ export default function BluryZone({
       }}
       onClick={copyBlurVariable}
     >
-      <a className={styles.type} href={currentType.link} target='_blank'>
+      <a
+        className={`${styles.type} ${glurData ? styles.isGlur : ""}`}
+        href={currentType.link}
+        target='_blank'
+      >
         {currentType.name}
       </a>
-      {blurhash && (
+      {(blurhash || glurData) && (
         <div className={styles.base64} onClick={copyBase64}>
           Copy Base64
         </div>
       )}
-      <div
-        className={styles.output}
-        contentEditable
-        suppressContentEditableWarning
-      >
-        {blurhash || gradient}
-      </div>
+      {!glurData && (
+        <div
+          className={styles.output}
+          contentEditable
+          suppressContentEditableWarning
+        >
+          {blurhash || gradient || ""}
+        </div>
+      )}
       <div className={styles.after}>
         <div
           className={styles.bluryImg}

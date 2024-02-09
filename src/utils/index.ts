@@ -1,15 +1,15 @@
 import { encode, decode } from "blurhash";
 import { imageToGradient } from "./image-to-gradient.js";
 
-export const canvasSize = 8;
+export const canvasSize = 32;
 
-export const resize = (url) => {
+export const resize = (url, maxWidth = 300) => {
   return new Promise((resolve, reject) => {
     var image = new Image();
     image.crossOrigin = "";
     image.onload = () => {
       var canvas = document.createElement("canvas"),
-        max_size = 300, // TODO : pull max size from a site config
+        max_size = maxWidth, // TODO : pull max size from a site config
         width = image.width,
         height = image.height;
       if (width > height) {

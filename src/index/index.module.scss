@@ -39,7 +39,7 @@
       width: 100%;
       height: 300px;
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
       position: relative;
       .arrow {
@@ -68,7 +68,7 @@
         border-radius: 2px;
       }
       &:nth-child(3) {
-        align-items: flex-start;
+        justify-content: space-around;
       }
       &:last-child {
         margin-top: 20px;
