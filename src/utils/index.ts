@@ -3,12 +3,16 @@ import { imageToGradient } from "./image-to-gradient.js";
 
 export const canvasSize = 32;
 
-export const resize = (url, maxWidth = 300) => {
+export const resize = (
+  url: string,
+  options?: { maxWidth?: number; type?: string; fillStyle?: string }
+) => {
+  const { maxWidth = 300, fillStyle } = options || {};
   return new Promise((resolve, reject) => {
-    var image = new Image();
+    const image = new Image();
     image.crossOrigin = "";
     image.onload = () => {
-      var canvas = document.createElement("canvas"),
+      let canvas = document.createElement("canvas"),
         max_size = maxWidth, // TODO : pull max size from a site config
         width = image.width,
         height = image.height;
@@ -25,12 +29,13 @@ export const resize = (url, maxWidth = 300) => {
       }
       canvas.width = width;
       canvas.height = height;
-      var context = canvas.getContext("2d");
-      context.fillStyle = "rgba(255, 255, 255, 1)";
-      context.fillRect(0, 0, canvas.width, canvas.height);
+      const context = canvas.getContext("2d");
+      if (fillStyle) {
+        context.fillStyle = fillStyle;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
       context.drawImage(image, 0, 0, width, height);
-      var dataUrl = canvas.toDataURL("image/jpeg");
-      // var resizedImage = dataURLToBlob(dataUrl);
+      const dataUrl = canvas.toDataURL("image/png");
       resolve(dataUrl);
     };
     image.onerror = (e) => reject(e);
@@ -82,4 +87,10 @@ export const decodeBlurhash = async (blurhash) => {
   const height = canvasSize;
   const pixels = decode(blurhash, width, height);
   return pixels;
+};
+
+export const getImgContentType = (src) => {
+  return fetch(src, { method: "GET" }).then((response) =>
+    response.headers.get("Content-type")
+  );
 };

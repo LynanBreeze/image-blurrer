@@ -62,27 +62,27 @@ export default function BluryZone({
   }, [glurData]);
 
   const copyBlurVariable = async (e) => {
-    if (glurData) {
-      return;
-    }
     if (e.target.tagName === "A" || /output|base64/.test(e.target.className)) {
       return;
     }
-    const bluryVar = blurhash || gradient || "";
+    const base64 = canvasRef.current.toDataURL(
+      glurData && /png|svg/.test(image.type) ? "image/png" : "image/jpeg"
+    );
+    const bluryVar = `${blurhash ? "blurhash:" : ""}${
+      blurhash || gradient || base64
+    }`;
     if (modeRef.current === "md") {
-      if (blurhash && /\[|\]/.test(blurhash)) {
+      if (/\[|\]/.test(bluryVar)) {
         await copy(
-          `<img src="${image.originalUrl || ""}" data-placeholderimg="${
-            blurhash ? "blurhash:" : ""
-          }${bluryVar}" style="aspect-ratio: ${image.width}/${
-            image.height
-          }" alt="">`
+          `<img src="${
+            image.originalUrl || ""
+          }" data-placeholderimg="${bluryVar}" style="aspect-ratio: ${
+            image.width
+          }/${image.height}" alt="">`
         );
       } else {
         await copy(
-          `![$placeholder=${
-            blurhash ? "blurhash:" : ""
-          }${bluryVar}=placeholder$aspect-ratio=${image.width}/${
+          `![$placeholder=${bluryVar}=placeholder$aspect-ratio=${image.width}/${
             image.height
           }=aspect-ratio](${image.originalUrl || ""})`
         );
@@ -112,7 +112,9 @@ export default function BluryZone({
   };
 
   const copyBase64 = async () => {
-    const base64 = canvasRef.current.toDataURL("image/jpeg");
+    const base64 = canvasRef.current.toDataURL(
+      glurData && /png|svg/.test(image.type) ? "image/png" : "image/jpeg"
+    );
     if (modeRef.current === "md") {
       if (blurhash && /\[|\]/.test(blurhash)) {
         await copy(

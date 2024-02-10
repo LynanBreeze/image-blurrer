@@ -24,8 +24,8 @@
     position: relative;
     .github {
       position: absolute;
-      top: 0;
-      right: 0;
+      top: -30px;
+      right: -30px;
       width: 60px;
       height: 60px;
       background-image: url("/img/github.svg");
@@ -34,6 +34,8 @@
       background-repeat: no-repeat;
       cursor: pointer;
       z-index: 1;
+      border-radius: 30px;
+      background-color: #fff;
     }
     .row {
       width: 100%;

@@ -8,6 +8,7 @@ import {
   generateGradient,
   loadImage,
   getImageData,
+  getImgContentType,
 } from "../utils";
 import { Toaster, toast } from "sonner";
 import { Image } from "./types";
@@ -22,7 +23,10 @@ export default function Index(): ReactElement {
   const [glurData, setGlurData] = useState<any>("");
 
   const getBlurHash = async (url) => {
-    const hash = await encodeImageToBlurhash(url);
+    const resizedUrl = (await resize(url, {
+      fillStyle: "rgba(255, 255, 255, 1)",
+    })) as string;
+    const hash = await encodeImageToBlurhash(resizedUrl);
     setBlurhash(hash);
   };
 
@@ -44,8 +48,10 @@ export default function Index(): ReactElement {
     }
   };
 
-  const generateGlur = async (url) => {
-    const resizedUrl = (await resize(url, 32)) as string;
+  const generateGlur = async (url, type) => {
+    const resizedUrl = (await resize(url, {
+      maxWidth: 32,
+    })) as string;
     const img = (await loadImage(resizedUrl)) as HTMLImageElement;
     let imageData = getImageData(img);
     glur(imageData.data, img.width, img.height, img.width / 10);
@@ -57,30 +63,40 @@ export default function Index(): ReactElement {
   };
 
   const onFileChange = async (url) => {
+    const loadingToastId = toast.loading("loading image");
     const task = async (retry?: boolean) => {
       const loadUrl = retry
         ? `https://cors-image-proxy.lynanbreeze.workers.dev/${url}`
         : url;
-      const resizedUrl = (await resize(loadUrl)) as string;
-      const previewUrl = (await resize(loadUrl, previewImageWidth)) as string;
-      getBlurHash(resizedUrl);
-      getGradient(resizedUrl);
       const img = (await loadImage(loadUrl)) as HTMLImageElement;
+      const resizedUrl = (await resize(loadUrl)) as string;
+      const type = await getImgContentType(resizedUrl);
+      const previewUrl = (await resize(loadUrl, {
+        maxWidth: previewImageWidth,
+      })) as string;
+      getBlurHash(loadUrl);
+      getGradient(resizedUrl);
       const imgObj = {
         width: img.width,
         height: img.height,
+        type,
         url: resizedUrl,
         previewUrl,
         originalUrl: /blob/.test(url) ? "" : url,
       };
       setImage(imgObj);
-      generateGlur(loadUrl);
+      generateGlur(loadUrl, type);
     };
     try {
       await task();
+      toast.dismiss(loadingToastId);
     } catch (error) {
-      toast(error.message || "error loading image, retry once now...");
+      toast.dismiss(loadingToastId);
+      const errorToastId = toast(
+        error.message || "error loading image, retry once now..."
+      );
       await task(true);
+      toast.dismiss(errorToastId);
     }
   };
 
