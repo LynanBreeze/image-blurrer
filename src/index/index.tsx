@@ -133,7 +133,7 @@ export default function Index(): ReactElement {
           e.preventDefault();
         }}
       >
-        <div className={styles.content}>
+        <div className={`${styles.content} ${image ? styles.hasImg : ""}`}>
           <FileDrop onChange={onFileChange} image={image} />
           <a
             href='https://github.com/lynanBreeze'
@@ -141,7 +141,7 @@ export default function Index(): ReactElement {
             className={styles.github}
           ></a>
           <div className={styles.row}>
-            <div>
+            <div className={styles.itemWrap}>
               {image && (
                 <>
                   <img
@@ -151,26 +151,36 @@ export default function Index(): ReactElement {
                       ...sizes,
                     }}
                   />
+                  <div className={styles.tag}>Original</div>
                 </>
               )}
             </div>
-            <BluryZone
-              image={image}
-              glurData={glurData}
-              sizes={sizes}
-            ></BluryZone>
+            <div className={styles.itemWrap}>
+              <BluryZone
+                image={image}
+                glurData={glurData}
+                sizes={sizes}
+              ></BluryZone>
+              <div className={styles.tag}>Best Quality</div>
+            </div>
           </div>
           <div className={styles.row}>
-            <BluryZone
-              image={image}
-              blurhash={blurhash}
-              sizes={sizes}
-            ></BluryZone>
-            <BluryZone
-              image={image}
-              gradient={gradient}
-              sizes={sizes}
-            ></BluryZone>
+            <div className={styles.itemWrap}>
+              <BluryZone
+                image={image}
+                blurhash={blurhash}
+                sizes={sizes}
+              ></BluryZone>
+              <div className={styles.tag}>Smallest Size</div>
+            </div>
+            <div className={styles.itemWrap}>
+              <div className={styles.tag}>Fastest Rendering</div>
+              <BluryZone
+                image={image}
+                gradient={gradient}
+                sizes={sizes}
+              ></BluryZone>
+            </div>
           </div>
         </div>
       </div>
