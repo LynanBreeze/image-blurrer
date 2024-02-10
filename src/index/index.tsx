@@ -14,7 +14,7 @@ import { Toaster, toast } from "sonner";
 import { Image } from "./types";
 import glur from "glur";
 
-const previewImageWidth = 800;
+const previewImageWidth = 500;
 
 export default function Index(): ReactElement {
   const [blurhash, setBlurhash] = useState<string>("");
@@ -48,7 +48,7 @@ export default function Index(): ReactElement {
     }
   };
 
-  const generateGlur = async (url, type) => {
+  const generateGlur = async (url) => {
     const resizedUrl = (await resize(url, {
       maxWidth: 32,
     })) as string;
@@ -69,11 +69,10 @@ export default function Index(): ReactElement {
         ? `https://cors-image-proxy.lynanbreeze.workers.dev/${url}`
         : url;
       const img = (await loadImage(loadUrl)) as HTMLImageElement;
-      const resizedUrl = (await resize(loadUrl)) as string;
-      const type = await getImgContentType(resizedUrl);
-      const previewUrl = (await resize(loadUrl, {
+      const resizedUrl = (await resize(loadUrl, {
         maxWidth: previewImageWidth,
       })) as string;
+      const type = await getImgContentType(loadUrl);
       getBlurHash(loadUrl);
       getGradient(resizedUrl);
       const imgObj = {
@@ -81,11 +80,10 @@ export default function Index(): ReactElement {
         height: img.height,
         type,
         url: resizedUrl,
-        previewUrl,
         originalUrl: /blob/.test(url) ? "" : url,
       };
       setImage(imgObj);
-      generateGlur(loadUrl, type);
+      generateGlur(resizedUrl);
     };
     try {
       await task();
@@ -148,7 +146,7 @@ export default function Index(): ReactElement {
                 <>
                   <img
                     className={styles.originalImg}
-                    src={image.previewUrl}
+                    src={image.url}
                     style={{
                       ...sizes,
                     }}

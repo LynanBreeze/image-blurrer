@@ -89,8 +89,16 @@ export const decodeBlurhash = async (blurhash) => {
   return pixels;
 };
 
-export const getImgContentType = (src) => {
-  return fetch(src, { method: "GET" }).then((response) =>
-    response.headers.get("Content-type")
-  );
+export const getImgContentType = async (src) => {
+  let res = "";
+  try {
+    res = await fetch(src, { method: "HEAD" }).then((response) =>
+      response.headers.get("Content-type")
+    );
+  } catch (error) {
+    res = await fetch(src, { method: "GET" }).then((response) =>
+      response.headers.get("Content-type")
+    );
+  }
+  return res;
 };
