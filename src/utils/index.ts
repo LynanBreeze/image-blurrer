@@ -33,9 +33,7 @@ export const resize = (url, maxWidth = 300) => {
       // var resizedImage = dataURLToBlob(dataUrl);
       resolve(dataUrl);
     };
-    image.onerror = () => {
-      reject(new Error("error loading image"));
-    };
+    image.onerror = (e) => reject(e);
     image.src = url;
   });
 };
@@ -45,7 +43,7 @@ export const loadImage = async (src) =>
     const img = new Image();
     img.crossOrigin = "";
     img.onload = () => resolve(img);
-    img.onerror = (...args) => reject(args);
+    img.onerror = (e) => reject(e);
     img.src = src;
   });
 

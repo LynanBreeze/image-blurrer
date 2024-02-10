@@ -13,6 +13,8 @@ import { Toaster, toast } from "sonner";
 import { Image } from "./types";
 import glur from "glur";
 
+const previewImageWidth = 800;
+
 export default function Index(): ReactElement {
   const [blurhash, setBlurhash] = useState<string>("");
   const [gradient, setGradient] = useState<string>("");
@@ -55,12 +57,15 @@ export default function Index(): ReactElement {
   };
 
   const onFileChange = async (url) => {
-    try {
-      const resizedUrl = (await resize(url)) as string;
-      const previewUrl = (await resize(url, 800)) as string;
+    const task = async (retry?: boolean) => {
+      const loadUrl = retry
+        ? `https://cors-image-proxy.lynanbreeze.workers.dev/${url}`
+        : url;
+      const resizedUrl = (await resize(loadUrl)) as string;
+      const previewUrl = (await resize(loadUrl, previewImageWidth)) as string;
       getBlurHash(resizedUrl);
       getGradient(resizedUrl);
-      const img = (await loadImage(url)) as HTMLImageElement;
+      const img = (await loadImage(loadUrl)) as HTMLImageElement;
       const imgObj = {
         width: img.width,
         height: img.height,
@@ -69,9 +74,13 @@ export default function Index(): ReactElement {
         originalUrl: /blob/.test(url) ? "" : url,
       };
       setImage(imgObj);
-      generateGlur(url);
+      generateGlur(loadUrl);
+    };
+    try {
+      await task();
     } catch (error) {
-      toast(error.message);
+      toast(error.message || "error loading image, retry once now...");
+      await task(true);
     }
   };
 
