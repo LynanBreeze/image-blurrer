@@ -1,10 +1,9 @@
-import { ReactElement, useRef, useEffect } from "react";
+import { ReactElement, useRef, useEffect, useState } from "react";
 import styles from "./index.module.scss";
-import { decodeBlurhash, canvasSize } from "../../utils";
+import { decodeBlurhash, getBase64Size, humanFileSize } from "../../utils";
 import { toast } from "sonner";
 import copy from "copy-to-clipboard";
 import { Image } from "../types";
-import qs from "query-string";
 
 interface IProps {
   image: Image;
@@ -15,6 +14,8 @@ interface IProps {
     width?: number;
     height?: number;
   };
+  isMarkdownMode: boolean;
+  canvasWidth: number;
 }
 
 export default function BluryZone({
@@ -23,14 +24,17 @@ export default function BluryZone({
   gradient,
   glurData,
   sizes,
+  isMarkdownMode,
+  canvasWidth,
 }: IProps): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const modeRef = useRef(qs.parse(location.search).mode);
+  const base64 = useRef<string>("");
+  const [base64Size, setBase64Size] = useState<string>("");
 
   const renderBlurhash = async (blurhash) => {
-    const pixels = await decodeBlurhash(blurhash);
-    const width = canvasSize;
-    const height = canvasSize;
+    const pixels = await decodeBlurhash(blurhash, canvasWidth);
+    const width = canvasWidth;
+    const height = canvasWidth;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     canvas.width = width;
@@ -38,6 +42,10 @@ export default function BluryZone({
     const imageData = ctx.createImageData(width, height);
     imageData.data.set(pixels);
     ctx.putImageData(imageData, 0, 0);
+    base64.current = canvas.toDataURL(
+      glurData && /png|svg/.test(image.type) ? "image/png" : "image/jpeg"
+    );
+    setBase64Size(getBase64Size(base64.current));
   };
 
   const renderGlur = async (glurData) => {
@@ -47,13 +55,17 @@ export default function BluryZone({
     canvas.width = width;
     canvas.height = height;
     ctx.putImageData(imageData, 0, 0);
+    base64.current = canvas.toDataURL(
+      glurData && /png|svg/.test(image.type) ? "image/png" : "image/jpeg"
+    );
+    setBase64Size(getBase64Size(base64.current));
   };
 
   useEffect(() => {
     if (blurhash) {
       renderBlurhash(blurhash);
     }
-  }, [blurhash]);
+  }, [blurhash, canvasWidth]);
 
   useEffect(() => {
     if (glurData) {
@@ -65,13 +77,11 @@ export default function BluryZone({
     if (e.target.tagName === "A" || /output|base64/.test(e.target.className)) {
       return;
     }
-    const base64 = canvasRef.current.toDataURL(
-      glurData && /png|svg/.test(image.type) ? "image/png" : "image/jpeg"
-    );
+
     const bluryVar = `${blurhash ? "blurhash:" : ""}${
-      blurhash || gradient || base64
+      blurhash || gradient || base64.current
     }`;
-    if (modeRef.current === "md") {
+    if (isMarkdownMode) {
       if (/\[|\]/.test(bluryVar)) {
         await copy(
           `<img src="${
@@ -99,7 +109,7 @@ export default function BluryZone({
       link: "",
     };
     if (blurhash) {
-      res.name = "blurhash";
+      res.name = `blurhash(${humanFileSize(blurhash.length)})`;
       res.link = "https://blurha.sh/";
     } else if (gradient) {
       res.name = "gradient";
@@ -112,29 +122,26 @@ export default function BluryZone({
   };
 
   const copyBase64 = async () => {
-    const base64 = canvasRef.current.toDataURL(
-      glurData && /png|svg/.test(image.type) ? "image/png" : "image/jpeg"
-    );
-    if (modeRef.current === "md") {
+    if (isMarkdownMode) {
       if (blurhash && /\[|\]/.test(blurhash)) {
         await copy(
           `<img src="${image.originalUrl || ""}" data-placeholderimg="${
             blurhash ? "blurhash:" : ""
-          }${base64}" style="aspect-ratio: ${image.width}/${
+          }${base64.current}" style="aspect-ratio: ${image.width}/${
             image.height
           }" alt="">`
         );
       } else {
         await copy(
-          `![$placeholder=${
-            blurhash ? "blurhash:" : ""
-          }${base64}=placeholder$aspect-ratio=${image.width}/${
+          `![$placeholder=${blurhash ? "blurhash:" : ""}${
+            base64.current
+          }=placeholder$aspect-ratio=${image.width}/${
             image.height
           }=aspect-ratio](${image.originalUrl || ""})`
         );
       }
     } else {
-      await copy(base64);
+      await copy(base64.current);
     }
     toast("Copied to Clipboard");
   };
@@ -159,7 +166,12 @@ export default function BluryZone({
       </a>
       {(blurhash || glurData) && (
         <div className={styles.base64} onClick={copyBase64}>
-          Copy Base64
+          {`Copy Base64(${base64Size})`}
+        </div>
+      )}
+      {gradient && (
+        <div className={styles.css}>
+          {`Copy CSS(${humanFileSize(gradient.length)})`}
         </div>
       )}
       {!glurData && (
@@ -180,8 +192,8 @@ export default function BluryZone({
         >
           <canvas
             ref={canvasRef}
-            width={canvasSize}
-            height={canvasSize}
+            width={canvasWidth}
+            height={canvasWidth}
             style={{
               display: gradient ? "none" : "block",
             }}

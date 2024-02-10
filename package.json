@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "ahooks": "^3.7.10",
     "blurhash": "^2.0.5",
     "copy-to-clipboard": "^3.3.3",
     "glur": "^1.1.2",

@@ -1,4 +1,4 @@
-import { ReactElement, useState } from "react";
+import { ReactElement, useState, InputEvent } from "react";
 import styles from "./index.module.scss";
 import FileDrop from "./FileDrop";
 import BluryZone from "./BluryZone";
@@ -9,18 +9,52 @@ import {
   loadImage,
   getImageData,
   getImgContentType,
+  defaultCanvasWidth,
 } from "../utils";
 import { Toaster, toast } from "sonner";
 import { Image } from "./types";
 import glur from "glur";
+import CheckBox from "./CheckBox";
+import { useUpdateEffect } from "ahooks";
+import queryString from "query-string";
 
 const previewImageWidth = 500;
+const initialCanvasWidth = queryString.parse(location.search).canvasWidth;
+const initialIsMarkdownMode = queryString.parse(location.search).mode === "md";
 
 export default function Index(): ReactElement {
   const [blurhash, setBlurhash] = useState<string>("");
   const [gradient, setGradient] = useState<string>("");
   const [image, setImage] = useState<Image | null>(null);
   const [glurData, setGlurData] = useState<any>("");
+  const [canvasWidth, setCanvasWidth] = useState<number>(
+    initialCanvasWidth ? Number(initialCanvasWidth) : defaultCanvasWidth
+  );
+  const [isMarkdownMode, setIsMarkdownMode] = useState<boolean>(
+    initialIsMarkdownMode
+  );
+
+  useUpdateEffect(() => {
+    const newLocation = new URL(location.href);
+    const query = queryString.parse(newLocation.search);
+    if (isMarkdownMode) {
+      query.mode = "md";
+    } else {
+      delete query.mode;
+    }
+    newLocation.search = `?${queryString.stringify(query)}`;
+    history.replaceState(null, "", newLocation.href);
+  }, [isMarkdownMode]);
+
+  useUpdateEffect(() => {
+    const newLocation = new URL(location.href);
+    const query = queryString.parse(newLocation.search);
+    if (canvasWidth) {
+      query.canvasWidth = `${canvasWidth}`;
+    }
+    newLocation.search = `?${queryString.stringify(query)}`;
+    history.replaceState(null, "", newLocation.href);
+  }, [canvasWidth]);
 
   const getBlurHash = async (url) => {
     const resizedUrl = (await resize(url, {
@@ -50,7 +84,7 @@ export default function Index(): ReactElement {
 
   const generateGlur = async (url) => {
     const resizedUrl = (await resize(url, {
-      maxWidth: 32,
+      maxWidth: canvasWidth,
     })) as string;
     const img = (await loadImage(resizedUrl)) as HTMLImageElement;
     let imageData = getImageData(img);
@@ -98,6 +132,16 @@ export default function Index(): ReactElement {
     }
   };
 
+  const onCanvasWidthChange = () => {
+    if (!image) return;
+    if (!canvasWidth) return;
+    onFileChange(image.url);
+  };
+
+  useUpdateEffect(() => {
+    onCanvasWidthChange();
+  }, [canvasWidth]);
+
   const calculateSize = (image) => {
     const baseWidth = 400;
     const baseHeight = 300;
@@ -133,6 +177,33 @@ export default function Index(): ReactElement {
           e.preventDefault();
         }}
       >
+        <div className={styles.settings}>
+          <span className={styles.label}>Markdown Mode:</span>
+          <CheckBox
+            value={isMarkdownMode}
+            onChange={setIsMarkdownMode}
+          ></CheckBox>
+          <div>
+            <span className={styles.label}>Canvas Width:</span>
+            <input
+              type='text'
+              className={styles.canvasWidthInput}
+              defaultValue={canvasWidth}
+              pattern='[0-9]+'
+              onKeyUp={(e: InputEvent<HTMLInputElement>) => {
+                if (e.code === "Enter") {
+                  const newCanvasWidth = Number(e.target.value);
+                  if (newCanvasWidth <= 0 || newCanvasWidth > 1024) {
+                    e.target.value = canvasWidth;
+                    return toast.warning("Canvas width should with 1 ~ 1024");
+                  } else {
+                    setCanvasWidth(Number(e.target.value));
+                  }
+                }
+              }}
+            />
+          </div>
+        </div>
         <div className={`${styles.content} ${image ? styles.hasImg : ""}`}>
           <FileDrop onChange={onFileChange} image={image} />
           <a
@@ -160,8 +231,10 @@ export default function Index(): ReactElement {
                 image={image}
                 glurData={glurData}
                 sizes={sizes}
+                isMarkdownMode={isMarkdownMode}
+                canvasWidth={canvasWidth}
               ></BluryZone>
-              <div className={styles.tag}>Best Quality</div>
+              <div className={styles.tag}>Best Shape</div>
             </div>
           </div>
           <div className={styles.row}>
@@ -170,6 +243,8 @@ export default function Index(): ReactElement {
                 image={image}
                 blurhash={blurhash}
                 sizes={sizes}
+                isMarkdownMode={isMarkdownMode}
+                canvasWidth={canvasWidth}
               ></BluryZone>
               <div className={styles.tag}>Smallest Size</div>
             </div>
@@ -179,6 +254,8 @@ export default function Index(): ReactElement {
                 image={image}
                 gradient={gradient}
                 sizes={sizes}
+                isMarkdownMode={isMarkdownMode}
+                canvasWidth={canvasWidth}
               ></BluryZone>
             </div>
           </div>

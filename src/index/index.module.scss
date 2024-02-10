@@ -6,13 +6,27 @@
   background-size: contain;
   background-position: center;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  .settings {
+    display: flex;
+    align-items: center;
+    .label {
+      margin: 0 10px;
+    }
+    .canvasWidthInput {
+      width: 80px;
+      outline: none;
+      border: none;
+    }
+    margin-bottom: 10px;
+  }
   .content {
     flex: 0 0 auto;
     width: 900px;
     height: 660px;
     border-radius: 10px;
-    margin: auto auto;
     background-color: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(70px);
     display: flex;

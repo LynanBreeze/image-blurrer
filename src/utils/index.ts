@@ -1,7 +1,7 @@
 import { encode, decode } from "blurhash";
 import { imageToGradient } from "./image-to-gradient.js";
 
-export const canvasSize = 32;
+export const defaultCanvasWidth = 32;
 
 export const resize = (
   url: string,
@@ -82,9 +82,9 @@ export const generateGradient = async (imageUrl) => {
   });
 };
 
-export const decodeBlurhash = async (blurhash) => {
-  const width = canvasSize;
-  const height = canvasSize;
+export const decodeBlurhash = async (blurhash, canvasWidth) => {
+  const width = canvasWidth;
+  const height = canvasWidth;
   const pixels = decode(blurhash, width, height);
   return pixels;
 };
@@ -92,8 +92,8 @@ export const decodeBlurhash = async (blurhash) => {
 export const getImgContentType = async (src) => {
   let res = "";
   try {
-    res = await fetch(src, { method: "HEAD" }).then((response) =>
-      response.headers.get("Content-type")
+    res = await fetch(src, { method: /blob/.test(src) ? "GET" : "HEAD" }).then(
+      (response) => response.headers.get("Content-type")
     );
   } catch (error) {
     res = await fetch(src, { method: "GET" }).then((response) =>
@@ -102,3 +102,43 @@ export const getImgContentType = async (src) => {
   }
   return res;
 };
+
+export const getBase64Size = (base64String) => {
+  return humanFileSize(
+    base64String.length * (3 / 4) - (base64String.endsWith("==") ? 2 : 1)
+  );
+};
+
+/**
+ * Format bytes as human-readable text.
+ *
+ * @param bytes Number of bytes.
+ * @param si True to use metric (SI) units, aka powers of 1000. False to use
+ *           binary (IEC), aka powers of 1024.
+ * @param dp Number of decimal places to display.
+ *
+ * @return Formatted string.
+ */
+export function humanFileSize(bytes, si = false, dp = 1) {
+  const thresh = si ? 1000 : 1024;
+
+  if (Math.abs(bytes) < thresh) {
+    return bytes + " B";
+  }
+
+  const units = si
+    ? ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+    : ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+  let u = -1;
+  const r = 10 ** dp;
+
+  do {
+    bytes /= thresh;
+    ++u;
+  } while (
+    Math.round(Math.abs(bytes) * r) / r >= thresh &&
+    u < units.length - 1
+  );
+
+  return bytes.toFixed(dp) + " " + units[u];
+}
