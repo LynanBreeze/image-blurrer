@@ -43,7 +43,7 @@ export default function BluryZone({
     imageData.data.set(pixels);
     ctx.putImageData(imageData, 0, 0);
     base64.current = canvas.toDataURL(
-      glurData && /png|svg/.test(image.type) ? "image/png" : "image/jpeg"
+      glurData && /png|svg/.test(image.type) ? "image/png" : "image/bmp"
     );
     setBase64Size(getBase64Size(base64.current));
   };
@@ -56,7 +56,7 @@ export default function BluryZone({
     canvas.height = height;
     ctx.putImageData(imageData, 0, 0);
     base64.current = canvas.toDataURL(
-      glurData && /png|svg/.test(image.type) ? "image/png" : "image/jpeg"
+      glurData && /png|svg/.test(image.type) ? "image/png" : "image/bmp"
     );
     setBase64Size(getBase64Size(base64.current));
   };
