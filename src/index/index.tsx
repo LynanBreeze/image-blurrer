@@ -1,4 +1,4 @@
-import { ReactElement, useState, InputEvent } from "react";
+import { ReactElement, useState, KeyboardEvent } from "react";
 import styles from "./index.module.scss";
 import FileDrop from "./FileDrop";
 import BluryZone from "./BluryZone";
@@ -49,8 +49,9 @@ export default function Index(): ReactElement {
   useUpdateEffect(() => {
     const newLocation = new URL(location.href);
     const query = queryString.parse(newLocation.search);
-    if (canvasWidth) {
-      query.canvasWidth = `${canvasWidth}`;
+    query.canvasWidth = `${canvasWidth}`;
+    if (canvasWidth === defaultCanvasWidth) {
+      delete query.canvasWidth;
     }
     newLocation.search = `?${queryString.stringify(query)}`;
     history.replaceState(null, "", newLocation.href);
@@ -190,14 +191,15 @@ export default function Index(): ReactElement {
               className={styles.canvasWidthInput}
               defaultValue={canvasWidth}
               pattern='[0-9]+'
-              onKeyUp={(e: InputEvent<HTMLInputElement>) => {
+              onKeyUp={(e: KeyboardEvent<HTMLInputElement>) => {
                 if (e.code === "Enter") {
-                  const newCanvasWidth = Number(e.target.value);
+                  const target = e.target as HTMLInputElement;
+                  const newCanvasWidth = Number(target.value);
                   if (newCanvasWidth <= 0 || newCanvasWidth > 1024) {
-                    e.target.value = canvasWidth;
+                    target.value = `${canvasWidth}`;
                     return toast.warning("Canvas width should with 1 ~ 1024");
                   } else {
-                    setCanvasWidth(Number(e.target.value));
+                    setCanvasWidth(Number(target.value));
                   }
                 }
               }}
