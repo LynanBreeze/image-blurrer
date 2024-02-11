@@ -84,12 +84,14 @@ export default function Index(): ReactElement {
   };
 
   const generateGlur = async (url) => {
+    console.time("generateGlur");
     const resizedUrl = (await resize(url, {
       maxWidth: canvasWidth,
     })) as string;
     const img = (await loadImage(resizedUrl)) as HTMLImageElement;
     let imageData = getImageData(img);
     glur(imageData.data, img.width, img.height, img.width / 10);
+    console.timeEnd("generateGlur");
     setGlurData({
       imageData,
       width: img.width,
@@ -136,7 +138,7 @@ export default function Index(): ReactElement {
   const onCanvasWidthChange = () => {
     if (!image) return;
     if (!canvasWidth) return;
-    onFileChange(image.url);
+    onFileChange(image.originalUrl);
   };
 
   useUpdateEffect(() => {

@@ -64,12 +64,17 @@ export const getImageData = (image) => {
 };
 
 export const encodeImageToBlurhash = async (imageUrl) => {
+  console.time("generateBlurhash");
   const image = await loadImage(imageUrl);
   const imageData = getImageData(image);
-  return encode(imageData.data, imageData.width, imageData.height, 4, 3);
+  const res = encode(imageData.data, imageData.width, imageData.height, 4, 4);
+  console.timeEnd("generateBlurhash");
+
+  return res;
 };
 
 export const generateGradient = async (imageUrl) => {
+  console.time("generateGradient");
   var options = {
     angle: 0, // gradient angle in degrees
     steps: 6, // number of steps
@@ -77,6 +82,7 @@ export const generateGradient = async (imageUrl) => {
   return new Promise((resolve) => {
     imageToGradient(imageUrl, options, function (err, cssGradient) {
       if (err) throw err;
+      console.timeEnd("generateGradient");
       resolve(cssGradient);
     });
   });

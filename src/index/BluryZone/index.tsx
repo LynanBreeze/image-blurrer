@@ -4,6 +4,7 @@ import { decodeBlurhash, getBase64Size, humanFileSize } from "../../utils";
 import { toast } from "sonner";
 import copy from "copy-to-clipboard";
 import { Image } from "../types";
+import { canvasToBMP } from "../../utils/canvas-to-bmp.js";
 
 interface IProps {
   image: Image;
@@ -31,6 +32,18 @@ export default function BluryZone({
   const base64 = useRef<string>("");
   const [base64Size, setBase64Size] = useState<string>("");
 
+  const generateBase64 = (canvas) => {
+    let targetType = "image/jpeg";
+    if (glurData && /png|svg/.test(image.type)) {
+      targetType = "image/png";
+    } else if (blurhash) {
+      targetType = canvasWidth <= 12 ? "image/bmp" : "image/jpeg";
+    }
+    return targetType === "image/bmp"
+      ? canvasToBMP.toDataURL(canvas)
+      : canvas.toDataURL(targetType);
+  };
+
   const renderBlurhash = async (blurhash) => {
     const pixels = await decodeBlurhash(blurhash, canvasWidth);
     const width = canvasWidth;
@@ -42,9 +55,7 @@ export default function BluryZone({
     const imageData = ctx.createImageData(width, height);
     imageData.data.set(pixels);
     ctx.putImageData(imageData, 0, 0);
-    base64.current = canvas.toDataURL(
-      glurData && /png|svg/.test(image.type) ? "image/png" : "image/bmp"
-    );
+    base64.current = generateBase64(canvas);
     setBase64Size(getBase64Size(base64.current));
   };
 
@@ -55,9 +66,7 @@ export default function BluryZone({
     canvas.width = width;
     canvas.height = height;
     ctx.putImageData(imageData, 0, 0);
-    base64.current = canvas.toDataURL(
-      glurData && /png|svg/.test(image.type) ? "image/png" : "image/bmp"
-    );
+    base64.current = generateBase64(canvas);
     setBase64Size(getBase64Size(base64.current));
   };
 
@@ -126,18 +135,14 @@ export default function BluryZone({
       if (blurhash && /\[|\]/.test(blurhash)) {
         await copy(
           `<img src="${image.originalUrl || ""}" data-placeholderimg="${
-            blurhash ? "blurhash:" : ""
-          }${base64.current}" style="aspect-ratio: ${image.width}/${
-            image.height
-          }" alt="">`
+            base64.current
+          }" style="aspect-ratio: ${image.width}/${image.height}" alt="">`
         );
       } else {
         await copy(
-          `![$placeholder=${blurhash ? "blurhash:" : ""}${
-            base64.current
-          }=placeholder$aspect-ratio=${image.width}/${
-            image.height
-          }=aspect-ratio](${image.originalUrl || ""})`
+          `![$placeholder=${base64.current}=placeholder$aspect-ratio=${
+            image.width
+          }/${image.height}=aspect-ratio](${image.originalUrl || ""})`
         );
       }
     } else {
