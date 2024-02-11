@@ -117,7 +117,7 @@ export default function Index(): ReactElement {
         height: img.height,
         type,
         url: resizedUrl,
-        originalUrl: /blob/.test(url) ? "" : url,
+        originalUrl: url,
       };
       setImage(imgObj);
       generateGlur(resizedUrl);
