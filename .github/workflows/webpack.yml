@@ -1,0 +1,44 @@
+name: NodeJS with Webpack
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Cache NPM dependencies
+        uses: actions/cache@v3.3.3
+        with:
+          path: node_modules
+          key: ${{ runner.OS }}-npm-cache
+          restore-keys: |
+            ${{ runner.OS }}-npm-cache
+
+      - name: Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Commit
+        run: |
+          git config --global user.email "lynanbreeze@gmail.com"
+          git config --global user.name "lynan"
+          git add .
+          git commit -m 'auto build'
+          git push
