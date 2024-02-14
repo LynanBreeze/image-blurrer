@@ -1,16 +1,20 @@
 import { ReactElement, useRef, useEffect, useState } from "react";
 import styles from "./index.module.scss";
-import { decodeBlurhash, getBase64Size, humanFileSize } from "../../utils";
+import {
+  decodeBlurhash,
+  getBase64Size,
+  humanFileSize,
+} from "../../utils/index.js";
 import { toast } from "sonner";
 import copy from "copy-to-clipboard";
-import { Image } from "../types";
+import { Image, GlurData } from "../types.js";
 import { canvasToBMP } from "../../utils/canvas-to-bmp.js";
 
 interface IProps {
   image: Image;
   blurhash?: string;
   gradient?: string;
-  glurData?: any;
+  glurData?: GlurData;
   sizes: {
     width?: number;
     height?: number;

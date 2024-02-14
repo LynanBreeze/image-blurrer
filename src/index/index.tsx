@@ -1,7 +1,7 @@
 import { ReactElement, useState, KeyboardEvent } from "react";
 import styles from "./index.module.scss";
 import FileDrop from "./FileDrop";
-import BluryZone from "./BluryZone";
+import BluryImageRenderer from "./BluryImageRenderer";
 import {
   resize,
   encodeImageToBlurhash,
@@ -12,7 +12,7 @@ import {
   defaultCanvasWidth,
 } from "../utils";
 import { Toaster, toast } from "sonner";
-import { Image } from "./types";
+import { Image, GlurData } from "./types";
 import glur from "glur";
 import CheckBox from "./CheckBox";
 import { useUpdateEffect } from "ahooks";
@@ -26,7 +26,7 @@ export default function Index(): ReactElement {
   const [blurhash, setBlurhash] = useState<string>("");
   const [gradient, setGradient] = useState<string>("");
   const [image, setImage] = useState<Image | null>(null);
-  const [glurData, setGlurData] = useState<any>("");
+  const [glurData, setGlurData] = useState<GlurData | null>(null);
   const [canvasWidth, setCanvasWidth] = useState<number>(
     initialCanvasWidth ? Number(initialCanvasWidth) : defaultCanvasWidth
   );
@@ -167,6 +167,19 @@ export default function Index(): ReactElement {
     return {};
   };
 
+  const onCanvasWidthInpuKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.code === "Enter") {
+      const target = e.target as HTMLInputElement;
+      const newCanvasWidth = Number(target.value);
+      if (newCanvasWidth <= 0 || newCanvasWidth > 1024) {
+        target.value = `${canvasWidth}`;
+        return toast.warning("Canvas width should with 1 ~ 1024");
+      } else {
+        setCanvasWidth(Number(target.value));
+      }
+    }
+  };
+
   const sizes = calculateSize(image);
 
   return (
@@ -193,18 +206,7 @@ export default function Index(): ReactElement {
               className={styles.canvasWidthInput}
               defaultValue={canvasWidth}
               pattern='[0-9]+'
-              onKeyUp={(e: KeyboardEvent<HTMLInputElement>) => {
-                if (e.code === "Enter") {
-                  const target = e.target as HTMLInputElement;
-                  const newCanvasWidth = Number(target.value);
-                  if (newCanvasWidth <= 0 || newCanvasWidth > 1024) {
-                    target.value = `${canvasWidth}`;
-                    return toast.warning("Canvas width should with 1 ~ 1024");
-                  } else {
-                    setCanvasWidth(Number(target.value));
-                  }
-                }
-              }}
+              onKeyUp={onCanvasWidthInpuKeyUp}
             />
           </div>
         </div>
@@ -231,36 +233,36 @@ export default function Index(): ReactElement {
               )}
             </div>
             <div className={styles.itemWrap}>
-              <BluryZone
+              <BluryImageRenderer
                 image={image}
                 glurData={glurData}
                 sizes={sizes}
                 isMarkdownMode={isMarkdownMode}
                 canvasWidth={canvasWidth}
-              ></BluryZone>
+              ></BluryImageRenderer>
               <div className={styles.tag}>Best Shape</div>
             </div>
           </div>
           <div className={styles.row}>
             <div className={styles.itemWrap}>
-              <BluryZone
+              <BluryImageRenderer
                 image={image}
                 blurhash={blurhash}
                 sizes={sizes}
                 isMarkdownMode={isMarkdownMode}
                 canvasWidth={canvasWidth}
-              ></BluryZone>
+              ></BluryImageRenderer>
               <div className={styles.tag}>Smallest Size</div>
             </div>
             <div className={styles.itemWrap}>
               <div className={styles.tag}>Fastest Rendering</div>
-              <BluryZone
+              <BluryImageRenderer
                 image={image}
                 gradient={gradient}
                 sizes={sizes}
                 isMarkdownMode={isMarkdownMode}
                 canvasWidth={canvasWidth}
-              ></BluryZone>
+              ></BluryImageRenderer>
             </div>
           </div>
         </div>
