@@ -8,7 +8,6 @@ import {
 import { toast } from "sonner";
 import copy from "copy-to-clipboard";
 import { Image, GlurData } from "../types.js";
-import { canvasToBMP } from "../../utils/canvas-to-bmp.js";
 
 interface IProps {
   image: Image;
@@ -36,7 +35,7 @@ export default function BluryZone({
   const base64 = useRef<string>("");
   const [base64Size, setBase64Size] = useState<string>("");
 
-  const generateBase64 = (canvas) => {
+  const generateBase64 = (canvas): Promise<string> => {
     return new Promise(async (resolve) => {
       let targetType = "image/jpeg";
       if (glurData && /png|svg/.test(image.type)) {
@@ -44,12 +43,12 @@ export default function BluryZone({
       } else if (blurhash) {
         targetType = canvasWidth <= 12 ? "image/bmp" : "image/jpeg";
       }
-      const base64 = canvas.toDataURL(targetType);
+      const base64string = canvas.toDataURL(targetType);
       if (canvasWidth > 16) {
-        resolve(base64);
+        resolve(base64string);
       } else {
         // generate bmp imaeg for smaller size
-        const img = await window.Jimp.read(base64);
+        const img = await (window as any).Jimp.read(base64string);
         img.getBase64Async("image/bmp").then((res) => {
           resolve(res);
         });
