@@ -215,7 +215,7 @@ export default function Index(): ReactElement {
         <div className={`${styles.content} ${image ? styles.hasImg : ""}`}>
           <FileDrop onChange={onFileChange} image={image} />
           <a
-            href='https://github.com/lynanBreeze'
+            href='https://github.com/LynanBreeze/image-blurrer'
             target='_blank'
             className={styles.github}
           ></a>
