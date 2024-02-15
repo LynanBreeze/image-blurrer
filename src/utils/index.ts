@@ -110,9 +110,8 @@ export const getImgContentType = async (src) => {
 };
 
 export const getBase64Size = (base64String) => {
-  return humanFileSize(
-    base64String.length * (3 / 4) - (base64String.endsWith("==") ? 2 : 1)
-  );
+  const bodyString = base64String.split(",")[1];
+  return humanFileSize(Math.round((bodyString.length * 3) / 4));
 };
 
 /**
