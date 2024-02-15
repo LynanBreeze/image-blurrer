@@ -1,4 +1,4 @@
-import { ReactElement, useState, KeyboardEvent } from "react";
+import { ReactElement, useState, KeyboardEvent, useRef } from "react";
 import styles from "./index.module.scss";
 import FileDrop from "./FileDrop";
 import BluryImageRenderer from "./BluryImageRenderer";
@@ -30,6 +30,7 @@ export default function Index(): ReactElement {
   const [canvasWidth, setCanvasWidth] = useState<number>(
     initialCanvasWidth ? Number(initialCanvasWidth) : defaultCanvasWidth
   );
+  const canvasWidthRef = useRef<number>(canvasWidth);
   const [isMarkdownMode, setIsMarkdownMode] = useState<boolean>(
     initialIsMarkdownMode
   );
@@ -86,7 +87,7 @@ export default function Index(): ReactElement {
   const generateGlur = async (url) => {
     console.time("generateGlur");
     const resizedUrl = (await resize(url, {
-      maxWidth: canvasWidth,
+      maxWidth: canvasWidthRef.current,
     })) as string;
     const img = (await loadImage(resizedUrl)) as HTMLImageElement;
     let imageData = getImageData(img);
@@ -176,6 +177,7 @@ export default function Index(): ReactElement {
         return toast.warning("Canvas width should with 1 ~ 1024");
       } else {
         setCanvasWidth(Number(target.value));
+        canvasWidthRef.current = Number(target.value);
       }
     }
   };

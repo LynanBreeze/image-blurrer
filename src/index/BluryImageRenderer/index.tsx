@@ -37,15 +37,24 @@ export default function BluryZone({
   const [base64Size, setBase64Size] = useState<string>("");
 
   const generateBase64 = (canvas) => {
-    let targetType = "image/jpeg";
-    if (glurData && /png|svg/.test(image.type)) {
-      targetType = "image/png";
-    } else if (blurhash) {
-      targetType = canvasWidth <= 12 ? "image/bmp" : "image/jpeg";
-    }
-    return targetType === "image/bmp"
-      ? canvasToBMP.toDataURL(canvas)
-      : canvas.toDataURL(targetType);
+    return new Promise(async (resolve) => {
+      let targetType = "image/jpeg";
+      if (glurData && /png|svg/.test(image.type)) {
+        targetType = "image/png";
+      } else if (blurhash) {
+        targetType = canvasWidth <= 12 ? "image/bmp" : "image/jpeg";
+      }
+      const base64 = canvas.toDataURL(targetType);
+      if (canvasWidth > 16) {
+        resolve(base64);
+      } else {
+        // generate bmp imaeg for smaller size
+        const img = await window.Jimp.read(base64);
+        img.getBase64Async("image/bmp").then((res) => {
+          resolve(res);
+        });
+      }
+    });
   };
 
   const renderBlurhash = async (blurhash) => {
@@ -59,7 +68,7 @@ export default function BluryZone({
     const imageData = ctx.createImageData(width, height);
     imageData.data.set(pixels);
     ctx.putImageData(imageData, 0, 0);
-    base64.current = generateBase64(canvas);
+    base64.current = await generateBase64(canvas);
     setBase64Size(getBase64Size(base64.current));
   };
 
@@ -70,7 +79,7 @@ export default function BluryZone({
     canvas.width = width;
     canvas.height = height;
     ctx.putImageData(imageData, 0, 0);
-    base64.current = generateBase64(canvas);
+    base64.current = await generateBase64(canvas);
     setBase64Size(getBase64Size(base64.current));
   };
 
