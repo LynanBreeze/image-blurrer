@@ -87,18 +87,18 @@ export default function BluryZone({
     canvas.height = height;
     ctx.putImageData(imageData, 0, 0);
     base64.current = await generateBase64(canvas);
-    console.log(getBase64Size(base64.current), "renderGlur");
     setBase64Size(getBase64Size(base64.current));
   };
 
   const renderStackBlur = async () => {
+    console.time("renderStackBlur");
     const resizedUrl = (await resize(image.url, {
       maxWidth: canvasWidth,
     })) as string;
     const img = (await loadImage(resizedUrl)) as HTMLImageElement;
     StackBlur.image(img, canvasRef.current, stackBlurRadius, false);
+    console.timeEnd("renderStackBlur");
     base64.current = await generateBase64(canvasRef.current);
-    console.log(getBase64Size(base64.current), "renderStackBlur");
     setBase64Size(getBase64Size(base64.current));
   };
 
@@ -113,6 +113,10 @@ export default function BluryZone({
       renderGlur(glurData);
     }
   }, [glurData]);
+
+  useEffect(() => {
+    setStackBlurRadius(1);
+  }, [image]);
 
   useEffect(() => {
     if (isStackBlur && image) {
@@ -257,8 +261,9 @@ export default function BluryZone({
           {isStackBlur && (
             <div className={styles.blurRadius}>
               <Slider
+                value={stackBlurRadius}
                 min={1}
-                max={canvasWidth}
+                max={Math.min(canvasWidth, 180)}
                 marks={{ number: <span></span> }}
                 onChange={(radius: number) => setStackBlurRadius(radius)}
               />
