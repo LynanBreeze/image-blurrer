@@ -4,10 +4,15 @@ import {
   decodeBlurhash,
   getBase64Size,
   humanFileSize,
+  loadImage,
+  resize,
 } from "../../utils/index.js";
 import { toast } from "sonner";
 import copy from "copy-to-clipboard";
 import { Image, GlurData } from "../types.js";
+import * as StackBlur from "../../../node_modules/stackblur-canvas/dist/stackblur-es.min.js";
+import Slider from "rc-slider";
+import "rc-slider/assets/index.css";
 
 interface IProps {
   image: Image;
@@ -20,6 +25,7 @@ interface IProps {
   };
   isMarkdownMode: boolean;
   canvasWidth: number;
+  isStackBlur?: boolean;
 }
 
 export default function BluryZone({
@@ -30,10 +36,12 @@ export default function BluryZone({
   sizes,
   isMarkdownMode,
   canvasWidth,
+  isStackBlur,
 }: IProps): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const base64 = useRef<string>("");
   const [base64Size, setBase64Size] = useState<string>("");
+  const [stackBlurRadius, setStackBlurRadius] = useState<number>(1);
 
   const generateBase64 = (canvas): Promise<string> => {
     return new Promise(async (resolve) => {
@@ -79,6 +87,18 @@ export default function BluryZone({
     canvas.height = height;
     ctx.putImageData(imageData, 0, 0);
     base64.current = await generateBase64(canvas);
+    console.log(getBase64Size(base64.current), "renderGlur");
+    setBase64Size(getBase64Size(base64.current));
+  };
+
+  const renderStackBlur = async () => {
+    const resizedUrl = (await resize(image.url, {
+      maxWidth: canvasWidth,
+    })) as string;
+    const img = (await loadImage(resizedUrl)) as HTMLImageElement;
+    StackBlur.image(img, canvasRef.current, stackBlurRadius, false);
+    base64.current = await generateBase64(canvasRef.current);
+    console.log(getBase64Size(base64.current), "renderStackBlur");
     setBase64Size(getBase64Size(base64.current));
   };
 
@@ -94,8 +114,17 @@ export default function BluryZone({
     }
   }, [glurData]);
 
+  useEffect(() => {
+    if (isStackBlur && image) {
+      renderStackBlur();
+    }
+  }, [image, isStackBlur, canvasWidth, stackBlurRadius]);
+
   const copyBlurVariable = async (e) => {
-    if (e.target.tagName === "A" || /output|base64/.test(e.target.className)) {
+    if (
+      e.target.tagName === "A" ||
+      /output|base64|rc|blurRadius/.test(e.target.className)
+    ) {
       return;
     }
 
@@ -138,6 +167,9 @@ export default function BluryZone({
     } else if (glurData) {
       res.name = "Gaussian Blur";
       res.link = "https://github.com/nodeca/glur";
+    } else if (isStackBlur) {
+      res.name = "Stack Blur";
+      res.link = "https://github.com/flozz/StackBlur";
     }
     return res;
   };
@@ -165,6 +197,8 @@ export default function BluryZone({
 
   const currentType = getType();
 
+  const outputString = blurhash || gradient;
+
   return (
     <div
       className={styles.bluryZone}
@@ -175,14 +209,19 @@ export default function BluryZone({
       onClick={copyBlurVariable}
     >
       <a
-        className={`${styles.type} ${glurData ? styles.isGlur : ""}`}
+        className={`${styles.type} ${
+          glurData || isStackBlur ? styles.onLeftTop : ""
+        }`}
         href={currentType.link}
         target='_blank'
       >
         {currentType.name}
       </a>
-      {(blurhash || glurData) && (
-        <div className={styles.base64} onClick={copyBase64}>
+      {(blurhash || glurData || isStackBlur) && (
+        <div
+          className={`${styles.base64} ${isStackBlur ? styles.onLeft : ""}`}
+          onClick={copyBase64}
+        >
           {`Copy Base64(${base64Size})`}
         </div>
       )}
@@ -191,13 +230,13 @@ export default function BluryZone({
           {`Copy CSS(${humanFileSize(gradient.length)})`}
         </div>
       )}
-      {!glurData && (
+      {!glurData && outputString && (
         <div
           className={styles.output}
           contentEditable
           suppressContentEditableWarning
         >
-          {blurhash || gradient || ""}
+          {outputString}
         </div>
       )}
       <div className={styles.after}>
@@ -215,6 +254,16 @@ export default function BluryZone({
               display: gradient ? "none" : "block",
             }}
           ></canvas>
+          {isStackBlur && (
+            <div className={styles.blurRadius}>
+              <Slider
+                min={1}
+                max={canvasWidth}
+                marks={{ number: <span></span> }}
+                onChange={(radius: number) => setStackBlurRadius(radius)}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

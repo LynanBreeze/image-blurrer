@@ -15,10 +15,12 @@
     "copy-to-clipboard": "^3.3.3",
     "glur": "^1.1.2",
     "query-string": "^8.2.0",
+    "rc-slider": "^10.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sass": "^1.69.5",
-    "sonner": "^1.4.0"
+    "sonner": "^1.4.0",
+    "stackblur-canvas": "^2.7.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",

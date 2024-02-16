@@ -220,7 +220,7 @@ export default function Index(): ReactElement {
             className={styles.github}
           ></a>
           <div className={styles.row}>
-            <div className={styles.itemWrap}>
+            {/* <div className={styles.itemWrap}>
               {image && (
                 <>
                   <img
@@ -233,6 +233,18 @@ export default function Index(): ReactElement {
                   <div className={styles.tag}>Original</div>
                 </>
               )}
+            </div> */}
+            <div className={styles.itemWrap}>
+              <BluryImageRenderer
+                image={image}
+                isStackBlur
+                sizes={sizes}
+                isMarkdownMode={isMarkdownMode}
+                canvasWidth={canvasWidth}
+              ></BluryImageRenderer>
+              <div className={`${styles.tag} ${styles.onRight}`}>
+                Best Shape
+              </div>
             </div>
             <div className={styles.itemWrap}>
               <BluryImageRenderer

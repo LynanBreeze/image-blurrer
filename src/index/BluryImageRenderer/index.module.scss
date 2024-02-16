@@ -13,7 +13,7 @@
     &:hover {
       color: #238efa;
     }
-    &.isGlur {
+    &.onLeftTop {
       top: 0;
       bottom: unset;
     }
@@ -31,6 +31,10 @@
     color: #333;
     &:hover {
       color: #238efa;
+    }
+    &.onLeft {
+      left: 0;
+      right: unset;
     }
   }
   .after {
@@ -50,8 +54,16 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      .blurRadius {
+        position: absolute;
+        width: 90%;
+        height: 50px;
+        z-index: 1;
+        left: 5%;
+        bottom: 20%;
       }
     }
   }
