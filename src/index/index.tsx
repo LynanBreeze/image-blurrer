@@ -1,4 +1,10 @@
-import { ReactElement, useState, KeyboardEvent, useRef } from "react";
+import {
+  ReactElement,
+  useState,
+  KeyboardEvent,
+  FocusEvent,
+  useRef,
+} from "react";
 import styles from "./index.module.scss";
 import FileDrop from "./FileDrop";
 import BluryImageRenderer from "./BluryImageRenderer";
@@ -168,17 +174,23 @@ export default function Index(): ReactElement {
     return {};
   };
 
-  const onCanvasWidthInpuKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+  const onCanvasWidthInputKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.code === "Enter") {
-      const target = e.target as HTMLInputElement;
-      const newCanvasWidth = Number(target.value);
-      if (newCanvasWidth <= 0 || newCanvasWidth > 1024) {
-        target.value = `${canvasWidth}`;
-        return toast.warning("Canvas width should with 1 ~ 1024");
-      } else {
-        setCanvasWidth(Number(target.value));
-        canvasWidthRef.current = Number(target.value);
-      }
+      onCanvasWidthInputChange(e);
+    }
+  };
+
+  const onCanvasWidthInputChange = (
+    e: KeyboardEvent<HTMLInputElement> | FocusEvent<HTMLInputElement>
+  ) => {
+    const target = e.target as HTMLInputElement;
+    const newCanvasWidth = Number(target.value);
+    if (newCanvasWidth <= 0 || newCanvasWidth > 1024) {
+      target.value = `${canvasWidth}`;
+      return toast.warning("Canvas width should with 1 ~ 1024");
+    } else {
+      setCanvasWidth(Number(target.value));
+      canvasWidthRef.current = Number(target.value);
     }
   };
 
@@ -208,7 +220,8 @@ export default function Index(): ReactElement {
               className={styles.canvasWidthInput}
               defaultValue={canvasWidth}
               pattern='[0-9]+'
-              onKeyUp={onCanvasWidthInpuKeyUp}
+              onKeyUp={onCanvasWidthInputKeyUp}
+              onBlur={onCanvasWidthInputChange}
             />
           </div>
         </div>
