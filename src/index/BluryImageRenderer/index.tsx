@@ -94,6 +94,7 @@ export default function BluryZone({
     console.time("renderStackBlur");
     const resizedUrl = (await resize(image.url, {
       maxWidth: canvasWidth,
+      fillStyle: "rgba(255, 255, 255, 1)",
     })) as string;
     const img = (await loadImage(resizedUrl)) as HTMLImageElement;
     StackBlur.image(img, canvasRef.current, stackBlurRadius, false);

@@ -94,6 +94,7 @@ export default function Index(): ReactElement {
     console.time("generateGlur");
     const resizedUrl = (await resize(url, {
       maxWidth: canvasWidthRef.current,
+      fillStyle: "rgba(255, 255, 255, 1)",
     })) as string;
     const img = (await loadImage(resizedUrl)) as HTMLImageElement;
     let imageData = getImageData(img);
