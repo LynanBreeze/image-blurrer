@@ -2,7 +2,7 @@
 
 **Image-Blurer** is a web App to generate blurry placeholder image.
 
-![](https://github.com/LynanBreeze/image-blurer/blob/main/public/img/img-blurrer.jpg?raw=true)
+![](https://github.com/LynanBreeze/image-blurer/blob/main/public/img/image-blurrer.jpg?raw=true)
 
 4 types of output image:
 
