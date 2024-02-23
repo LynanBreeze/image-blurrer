@@ -46,6 +46,7 @@ export default function BluryZone({
   const [stackBlurRadius, setStackBlurRadius] = useState<number>(1);
 
   // test output size
+  // @ts-ignore
   const testFunc = async () => {
     let res = "";
     for (let i = 4; i <= 32; i += 2) {
