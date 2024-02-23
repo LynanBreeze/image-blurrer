@@ -13,13 +13,11 @@ import {
   encodeImageToBlurhash,
   generateGradient,
   loadImage,
-  getImageData,
   getImgContentType,
   defaultCanvasWidth,
 } from "../utils";
 import { Toaster, toast } from "sonner";
-import { Image, GlurData } from "./types";
-import glur from "glur";
+import { Image } from "./types";
 import CheckBox from "./CheckBox";
 import { useUpdateEffect } from "ahooks";
 import queryString from "query-string";
@@ -32,7 +30,6 @@ export default function Index(): ReactElement {
   const [blurhash, setBlurhash] = useState<string>("");
   const [gradient, setGradient] = useState<string>("");
   const [image, setImage] = useState<Image | null>(null);
-  const [glurData, setGlurData] = useState<GlurData | null>(null);
   const [canvasWidth, setCanvasWidth] = useState<number>(
     initialCanvasWidth ? Number(initialCanvasWidth) : defaultCanvasWidth
   );
@@ -90,23 +87,6 @@ export default function Index(): ReactElement {
     }
   };
 
-  const generateGlur = async (url) => {
-    console.time("generateGlur");
-    const resizedUrl = (await resize(url, {
-      maxWidth: canvasWidthRef.current,
-      fillStyle: "rgba(255, 255, 255, 1)",
-    })) as string;
-    const img = (await loadImage(resizedUrl)) as HTMLImageElement;
-    let imageData = getImageData(img);
-    glur(imageData.data, img.width, img.height, img.width / 10);
-    console.timeEnd("generateGlur");
-    setGlurData({
-      imageData,
-      width: img.width,
-      height: img.height,
-    });
-  };
-
   const onFileChange = async (url) => {
     const loadingToastId = toast.loading("loading image");
     const task = async (retry?: boolean) => {
@@ -128,7 +108,6 @@ export default function Index(): ReactElement {
         originalUrl: url,
       };
       setImage(imgObj);
-      generateGlur(resizedUrl);
     };
     try {
       await task();
@@ -263,7 +242,7 @@ export default function Index(): ReactElement {
             <div className={styles.itemWrap}>
               <BluryImageRenderer
                 image={image}
-                glurData={glurData}
+                isGlur
                 sizes={sizes}
                 isMarkdownMode={isMarkdownMode}
                 canvasWidth={canvasWidth}

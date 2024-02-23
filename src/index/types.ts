@@ -5,9 +5,3 @@ export interface Image {
   type: string;
   originalUrl: string;
 }
-
-export interface GlurData {
-  imageData: ImageData;
-  width: number;
-  height: number;
-}

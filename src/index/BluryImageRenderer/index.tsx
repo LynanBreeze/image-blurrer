@@ -6,19 +6,20 @@ import {
   humanFileSize,
   loadImage,
   resize,
+  getImageData,
 } from "../../utils/index.js";
 import { toast } from "sonner";
 import copy from "copy-to-clipboard";
-import { Image, GlurData } from "../types.js";
+import { Image } from "../types.js";
 import * as StackBlur from "../../../node_modules/stackblur-canvas/dist/stackblur-es.min.js";
 import Slider from "rc-slider";
+import glur from "glur";
 import "rc-slider/assets/index.css";
 
 interface IProps {
   image: Image;
   blurhash?: string;
   gradient?: string;
-  glurData?: GlurData;
   sizes: {
     width?: number;
     height?: number;
@@ -26,40 +27,66 @@ interface IProps {
   isMarkdownMode: boolean;
   canvasWidth: number;
   isStackBlur?: boolean;
+  isGlur?: boolean;
 }
 
 export default function BluryZone({
   image,
   blurhash,
   gradient,
-  glurData,
   sizes,
   isMarkdownMode,
   canvasWidth,
   isStackBlur,
+  isGlur,
 }: IProps): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const base64 = useRef<string>("");
   const [base64Size, setBase64Size] = useState<string>("");
   const [stackBlurRadius, setStackBlurRadius] = useState<number>(1);
 
+  // test output size
+  const testFunc = async () => {
+    let res = "";
+    for (let i = 4; i <= 32; i += 2) {
+      const resizedUrl = (await resize(image.url, {
+        maxWidth: i,
+        fillStyle: "rgba(255, 255, 255, 1)",
+      })) as string;
+      const img = (await loadImage(resizedUrl)) as HTMLImageElement;
+      StackBlur.image(img, canvasRef.current, stackBlurRadius, false);
+      const jpg = canvasRef.current.toDataURL("image/jpeg");
+      const png = canvasRef.current.toDataURL("image/png");
+      const bmp = await new Promise(async (resolve) => {
+        const img1 = await (window as any).Jimp.read(resizedUrl);
+        img1.getBase64Async("image/bmp").then((res) => {
+          resolve(res);
+        });
+      });
+      res += `| ${i}     | ${getBase64Size(jpg)} | ${getBase64Size(
+        png
+      )}    | ${getBase64Size(bmp)}  |\n`;
+    }
+    console.log(res);
+  };
+
   const generateBase64 = (canvas): Promise<string> => {
     return new Promise(async (resolve) => {
       let targetType = "image/jpeg";
-      if (glurData && /png|svg/.test(image.type)) {
+      if (canvasWidth <= 10) {
+        targetType = "image/bmp";
+      } else if (canvasWidth <= 22) {
         targetType = "image/png";
-      } else if (blurhash) {
-        targetType = canvasWidth <= 12 ? "image/bmp" : "image/jpeg";
       }
       const base64string = canvas.toDataURL(targetType);
-      if (canvasWidth > 16) {
-        resolve(base64string);
-      } else {
+      if (targetType === "image/bmp") {
         // generate bmp imaeg for smaller size
         const img = await (window as any).Jimp.read(base64string);
         img.getBase64Async("image/bmp").then((res) => {
           resolve(res);
         });
+      } else {
+        resolve(base64string);
       }
     });
   };
@@ -79,17 +106,6 @@ export default function BluryZone({
     setBase64Size(getBase64Size(base64.current));
   };
 
-  const renderGlur = async (glurData) => {
-    const { imageData, width, height } = glurData;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    canvas.width = width;
-    canvas.height = height;
-    ctx.putImageData(imageData, 0, 0);
-    base64.current = await generateBase64(canvas);
-    setBase64Size(getBase64Size(base64.current));
-  };
-
   const renderStackBlur = async () => {
     console.time("renderStackBlur");
     const resizedUrl = (await resize(image.url, {
@@ -101,6 +117,36 @@ export default function BluryZone({
     console.timeEnd("renderStackBlur");
     base64.current = await generateBase64(canvasRef.current);
     setBase64Size(getBase64Size(base64.current));
+    // testFunc()
+    //   .then((res) => {})
+    //   .catch((error) => {
+    //     console.log(error);
+    //   });
+  };
+
+  const renderGlur = async () => {
+    console.time("renderGlur");
+    const resizedUrl = (await resize(image.url, {
+      maxWidth: canvasWidth,
+      fillStyle: "rgba(255, 255, 255, 1)",
+    })) as string;
+    const img = (await loadImage(resizedUrl)) as HTMLImageElement;
+    // StackBlur.image(img, canvasRef.current, stackBlurRadius, false);
+    let imageData = getImageData(img);
+    glur(imageData.data, img.width, img.height, stackBlurRadius);
+    console.timeEnd("renderGlur");
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.putImageData(imageData, 0, 0);
+    base64.current = await generateBase64(canvasRef.current);
+    setBase64Size(getBase64Size(base64.current));
+    // testFunc()
+    //   .then((res) => {})
+    //   .catch((error) => {
+    //     console.log(error);
+    //   });
   };
 
   useEffect(() => {
@@ -110,10 +156,10 @@ export default function BluryZone({
   }, [blurhash, canvasWidth]);
 
   useEffect(() => {
-    if (glurData) {
-      renderGlur(glurData);
+    if (isGlur && image) {
+      renderGlur();
     }
-  }, [glurData]);
+  }, [image, isStackBlur, canvasWidth, stackBlurRadius]);
 
   useEffect(() => {
     setStackBlurRadius(1);
@@ -169,7 +215,7 @@ export default function BluryZone({
     } else if (gradient) {
       res.name = "gradient";
       res.link = "https://github.com/peterekepeter/image-to-gradient";
-    } else if (glurData) {
+    } else if (isGlur) {
       res.name = "Gaussian Blur";
       res.link = "https://github.com/nodeca/glur";
     } else if (isStackBlur) {
@@ -215,14 +261,14 @@ export default function BluryZone({
     >
       <a
         className={`${styles.type} ${
-          glurData || isStackBlur ? styles.onLeftTop : ""
+          isGlur || isStackBlur ? styles.onLeftTop : ""
         }`}
         href={currentType.link}
         target='_blank'
       >
         {currentType.name}
       </a>
-      {(blurhash || glurData || isStackBlur) && (
+      {(blurhash || isGlur || isStackBlur) && (
         <div
           className={`${styles.base64} ${isStackBlur ? styles.onLeft : ""}`}
           onClick={copyBase64}
@@ -235,7 +281,7 @@ export default function BluryZone({
           {`Copy CSS(${humanFileSize(gradient.length)})`}
         </div>
       )}
-      {!glurData && outputString && (
+      {!isGlur && outputString && (
         <div
           className={styles.output}
           contentEditable
@@ -259,12 +305,12 @@ export default function BluryZone({
               display: gradient ? "none" : "block",
             }}
           ></canvas>
-          {isStackBlur && (
+          {(isStackBlur || isGlur) && (
             <div className={styles.blurRadius}>
               <Slider
                 value={stackBlurRadius}
                 min={1}
-                max={Math.min(canvasWidth, 180)}
+                max={Math.min(canvasWidth, isGlur ? 100 : 180)}
                 marks={{ number: <span></span> }}
                 onChange={(radius: number) => setStackBlurRadius(radius)}
               />
