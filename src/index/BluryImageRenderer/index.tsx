@@ -7,6 +7,7 @@ import {
   loadImage,
   resize,
   getImageData,
+  downloadBase64File,
 } from "../../utils/index.js";
 import { toast } from "sonner";
 import copy from "copy-to-clipboard";
@@ -15,6 +16,7 @@ import * as StackBlur from "../../../node_modules/stackblur-canvas/dist/stackblu
 import Slider from "rc-slider";
 import glur from "glur";
 import "rc-slider/assets/index.css";
+import { nanoid } from "nanoid";
 
 interface IProps {
   image: Image;
@@ -205,28 +207,34 @@ export default function BluryZone({
     toast("Copied to Clipboard");
   };
 
-  const getType = (): { name: string; link: string } => {
+  const getType = (): { name: string; link: string; shortname: string } => {
     const res = {
       name: "",
       link: "",
+      shortname: "",
     };
     if (blurhash) {
       res.name = `blurhash(${humanFileSize(blurhash.length)})`;
       res.link = "https://blurha.sh/";
+      res.shortname = "blurhash";
     } else if (gradient) {
       res.name = "gradient";
       res.link = "https://github.com/peterekepeter/image-to-gradient";
+      res.shortname = "gradient";
     } else if (isGlur) {
       res.name = "Gaussian Blur";
       res.link = "https://github.com/nodeca/glur";
+      res.shortname = "glur";
     } else if (isStackBlur) {
       res.name = "Stack Blur";
       res.link = "https://github.com/flozz/StackBlur";
+      res.shortname = "slur";
     }
     return res;
   };
 
-  const copyBase64 = async () => {
+  const copyBase64 = async (e) => {
+    e.stopPropagation();
     if (isMarkdownMode) {
       if (blurhash && /\[|\]/.test(blurhash)) {
         await copy(
@@ -249,6 +257,18 @@ export default function BluryZone({
 
   const currentType = getType();
 
+  const saveFile = (e) => {
+    e.stopPropagation();
+    const format = base64.current
+      .split(";base64")[0]
+      .replace("data:image/", "");
+
+    downloadBase64File(
+      base64.current,
+      `${nanoid()}-${currentType.shortname}.${format}`
+    );
+  };
+
   const outputString = blurhash || gradient;
 
   return (
@@ -270,11 +290,9 @@ export default function BluryZone({
         {currentType.name}
       </a>
       {(blurhash || isGlur || isStackBlur) && (
-        <div
-          className={`${styles.base64} ${isStackBlur ? styles.onLeft : ""}`}
-          onClick={copyBase64}
-        >
-          {`Copy Base64(${base64Size})`}
+        <div className={`${styles.base64} ${isStackBlur ? styles.onLeft : ""}`}>
+          <span onClick={copyBase64}>{`Copy Base64(${base64Size})`}</span>&nbsp;
+          <span onClick={saveFile}>Download</span>
         </div>
       )}
       {gradient && (

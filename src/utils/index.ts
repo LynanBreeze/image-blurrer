@@ -13,7 +13,7 @@ export const resize = (
     image.crossOrigin = "";
     image.onload = () => {
       let canvas = document.createElement("canvas"),
-        max_size = maxWidth, // TODO : pull max size from a site config
+        max_size = maxWidth,
         width = image.width,
         height = image.height;
       if (width > height) {
@@ -147,3 +147,14 @@ export function humanFileSize(bytes, si = false, dp = 1) {
 
   return bytes.toFixed(dp) + " " + units[u];
 }
+
+export const downloadBase64File = (contentBase64, fileName) => {
+  const linkSource = `${contentBase64}`;
+  const downloadLink = document.createElement("a");
+  document.body.appendChild(downloadLink);
+
+  downloadLink.href = linkSource;
+  downloadLink.target = "_self";
+  downloadLink.download = fileName;
+  downloadLink.click();
+};

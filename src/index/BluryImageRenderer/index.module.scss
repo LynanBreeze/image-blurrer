@@ -29,8 +29,10 @@
     padding: 0 5px;
     border-top-left-radius: 2px;
     color: #333;
-    &:hover {
-      color: #238efa;
+    span {
+      &:hover {
+        color: #238efa;
+      }
     }
     &.onLeft {
       left: 0;
