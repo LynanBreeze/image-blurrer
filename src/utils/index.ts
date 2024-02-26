@@ -16,16 +16,9 @@ export const resize = (
         max_size = maxWidth,
         width = image.width,
         height = image.height;
-      if (width > height) {
-        if (width > max_size) {
-          height *= max_size / width;
-          width = max_size;
-        }
-      } else {
-        if (height > max_size) {
-          width *= max_size / height;
-          height = max_size;
-        }
+      if (width > maxWidth || height > maxWidth) {
+        height *= max_size / width;
+        width = max_size;
       }
       canvas.width = width;
       canvas.height = height;
