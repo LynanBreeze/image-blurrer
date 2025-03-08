@@ -151,3 +151,12 @@ export const downloadBase64File = (contentBase64, fileName) => {
   downloadLink.download = fileName;
   downloadLink.click();
 };
+
+export const resizeCanvas = (width, height, canvas) => {
+  const newCanvas = document.createElement("canvas");
+  newCanvas.width = width;
+  newCanvas.height = height;
+  const ctx = newCanvas.getContext("2d");
+  ctx.drawImage(canvas, 0, 0, width, height);
+  return newCanvas;
+};

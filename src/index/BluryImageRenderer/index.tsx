@@ -8,6 +8,7 @@ import {
   resize,
   getImageData,
   downloadBase64File,
+  resizeCanvas,
 } from "../../utils/index.js";
 import { toast } from "sonner";
 import copy from "copy-to-clipboard";
@@ -57,6 +58,9 @@ export default function BluryZone({
         fillStyle: "rgba(255, 255, 255, 1)",
       })) as string;
       const img = (await loadImage(resizedUrl)) as HTMLImageElement;
+      canvasRef.current.width = canvasWidth;
+      canvasRef.current.height = canvasWidth * (img.height / img.width);
+      console.log(img.height / img.width);
       StackBlur.image(img, canvasRef.current, stackBlurRadius, false);
       const jpg = canvasRef.current.toDataURL("image/jpeg");
       const png = canvasRef.current.toDataURL("image/png");
@@ -105,7 +109,13 @@ export default function BluryZone({
     const imageData = ctx.createImageData(width, height);
     imageData.data.set(pixels);
     ctx.putImageData(imageData, 0, 0);
-    base64.current = await generateBase64(canvas);
+    base64.current = await generateBase64(
+      resizeCanvas(
+        canvasWidth,
+        canvasWidth * (image.height / image.width),
+        canvas
+      )
+    );
     setBase64Size(getBase64Size(base64.current));
   };
 
