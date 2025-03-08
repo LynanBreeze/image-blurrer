@@ -1,7 +1,7 @@
 import { encode, decode } from "blurhash";
 import { imageToGradient } from "./image-to-gradient.js";
 
-export const defaultCanvasWidth = 32;
+export const defaultCanvasWidth = 24;
 
 export const resize = (
   url: string,
