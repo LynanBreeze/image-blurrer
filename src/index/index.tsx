@@ -22,7 +22,7 @@ import CheckBox from "./CheckBox";
 import { useUpdateEffect } from "ahooks";
 import queryString from "query-string";
 
-const previewImageWidth = 500;
+const previewImageWidth = 600;
 const initialCanvasWidth = queryString.parse(location.search).canvasWidth;
 const initialIsMarkdownMode = queryString.parse(location.search).mode === "md";
 
